@@ -1,0 +1,12 @@
+{
+    "parent": "block/cube",
+    "textures": {
+        "particle": "doommod:blocks/multi_color_top",
+        "down": "doommod:blocks/multi_color_top",
+        "up": "doommod:blocks/multi_color_top",
+        "north": "doommod:blocks/multi_color",
+        "east": "doommod:blocks/multi_color",
+        "south": "doommod:blocks/multi_color",
+        "west": "doommod:blocks/multi_color"
+    }
+}

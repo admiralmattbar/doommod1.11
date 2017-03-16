@@ -1,0 +1,12 @@
+{
+    "parent": "block/cube",
+    "textures": {
+        "particle": "mymod:blocks/multi_color_top",
+        "down": "mymod:blocks/multi_color_top",
+        "up": "mymod:blocks/multi_color_top",
+        "north": "mymod:blocks/multi_color",
+        "east": "mymod:blocks/multi_color",
+        "south": "mymod:blocks/multi_color",
+        "west": "mymod:blocks/multi_color"
+    }
+}

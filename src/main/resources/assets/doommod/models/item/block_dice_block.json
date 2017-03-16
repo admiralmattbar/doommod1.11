@@ -1,0 +1,12 @@
+{
+    "parent": "block/cube",
+    "textures": {
+        "particle": "mymod:blocks/dice_one",
+        "down": "mymod:blocks/dice_one",
+        "up": "mymod:blocks/dice_two",
+        "north": "mymod:blocks/dice_three",
+        "east": "mymod:blocks/dice_four",
+        "south": "mymod:blocks/dice_five",
+        "west": "mymod:blocks/dice_six"
+    }
+}

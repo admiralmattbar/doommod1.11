@@ -1,0 +1,12 @@
+{
+    "parent": "block/cube",
+    "textures": {
+        "particle": "doommod:blocks/dice_one",
+        "down": "doommod:blocks/dice_one",
+        "up": "doommod:blocks/dice_two",
+        "north": "doommod:blocks/dice_three",
+        "east": "doommod:blocks/dice_four",
+        "south": "doommod:blocks/dice_five",
+        "west": "doommod:blocks/dice_six"
+    }
+}
