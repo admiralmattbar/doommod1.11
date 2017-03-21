@@ -14,13 +14,13 @@ import net.minecraft.world.World;
 
 public class ItemGun extends Item
 {
-	public static float damage;
+	public float damage;
 	private final float spread;
 	private final double speed;
 	
 	public ItemGun(float damage, float spread, double speed)
 	{
-		ItemGun.damage = damage;
+		this.damage = damage;
 		this.spread = spread;
 		this.speed = speed;
 	}
@@ -29,7 +29,7 @@ public class ItemGun extends Item
 	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand handIn)
 	{
 		ItemStack stack = this.findAmmo(playerIn);
-		if(stack != ItemStack.EMPTY)
+		if(stack != ItemStack.EMPTY || playerIn.capabilities.isCreativeMode)
 		{
 			worldIn.playSound(playerIn, playerIn.getPosition(), SoundEvents.BLOCK_ANVIL_BREAK, SoundCategory.PLAYERS, 1.0F, 0.5F + (itemRand.nextFloat()));
 			if(!worldIn.isRemote)
@@ -39,15 +39,16 @@ public class ItemGun extends Item
 			}
 			else
 			{
-				playerIn.rotationPitch -= 5f;
-			}
-			stack.shrink(1);
-			
-			if(stack.isEmpty())
-			{
-				playerIn.inventory.deleteStack(stack);
+				playerIn.rotationPitch -= 3f;
 			}
 			
+			if(!playerIn.capabilities.isCreativeMode){
+				stack.shrink(1);
+				if(stack.isEmpty())
+				{
+					playerIn.inventory.deleteStack(stack);
+				}
+			}
 		}
 		return super.onItemRightClick(worldIn, playerIn, handIn);
 	}

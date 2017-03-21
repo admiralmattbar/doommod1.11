@@ -78,7 +78,7 @@ public class ModItems
 	public static void init()
 	{
 		//Initialize items with class
-		shotgun = new ItemGun(10F, 10.0F, 10).setUnlocalizedName("shotgun").setRegistryName("item_shotgun").setCreativeTab(CreativeTabs.COMBAT);
+		shotgun = new ItemGun(10F, 10.0F, 1000).setUnlocalizedName("shotgun").setRegistryName("item_shotgun").setCreativeTab(CreativeTabs.COMBAT);
 		
 		shotgun_shell = new Item().setUnlocalizedName("shotgun_shell").setRegistryName("item_shotgun_shell").setCreativeTab(CreativeTabs.COMBAT);
 		

@@ -52,6 +52,7 @@ public class Main
 	@EventHandler
 	public void init(FMLInitializationEvent event) 
 	{
+		
 		System.out.println("Init Test");
 		proxy.init();
 		

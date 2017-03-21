@@ -6,16 +6,20 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.educraft.mymod.itemclasses.ItemGun;
-import org.educraft.mymod.utilclasses.ModDamageSource;
-
 import com.google.common.base.Predicate;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockBreakable;
+import net.minecraft.block.BlockPane;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IProjectile;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntitySelectors;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
@@ -24,108 +28,119 @@ import net.minecraft.world.World;
 
 public class EntityBullet extends Entity implements IProjectile
 {
-	private static final Predicate<Entity> ARROW_TARGETS = Predicates.and(new Predicate[] {EntitySelectors.NOT_SPECTATING, EntitySelectors.IS_ALIVE, new Predicate<Entity>()
+	
+	@SuppressWarnings("unchecked")
+	private static final Predicate<Entity> BULLET_TARGETS = Predicates.and(new Predicate[] {EntitySelectors.NOT_SPECTATING, EntitySelectors.IS_ALIVE, new Predicate<Entity>()
     {
         public boolean apply(@Nullable Entity p_apply_1_)
         {
             return p_apply_1_.canBeCollidedWith();
         }
     }});
+    
 		
 	private EntityLivingBase shooter;
 	private int ticksAlive = 100;
-	private double damage;
+	private float damage;
 
 	public Entity shootingEntity;
 
-	private int ticksInAir;
-    /** The amount of knockback an arrow applies when it hits a mob. */
-
-
+//Constructor
 	public EntityBullet(World worldIn) 
 	{
 		super(worldIn);
 		
 	}
 	
-	
+//Constructor (not sure why we need both)
 	public EntityBullet(World worldIn, EntityLivingBase shooter, float size, double speed, float damage)
     {
         super(worldIn);
         this.setShooter(shooter);
-        this.damage = ItemGun.damage;
+        this.damage = damage;
         this.setSize(size, size);
         this.setLocationAndAngles(shooter.posX, shooter.posY, shooter.posZ, shooter.rotationYaw, shooter.rotationPitch);
-        this.setPosition(this.posX, this.posY, this.posZ);
+
         Vec3d dir = shooter.getLookVec();
         this.motionX = dir.xCoord;
         this.motionY = dir.yCoord;
         this.motionZ = dir.zCoord;
-        //this.setAim();
+        this.setPosition(shooter.posX, shooter.posY + shooter.getEyeHeight() - 0.10000000149011612D, shooter.posZ);
 
     }
-	
-	
-	/*
-    public void setAim()
-    {
-        this.setLocationAndAngles(shooter.posX, shooter.posY, shooter.posZ, shooter.rotationYaw, shooter.rotationPitch);
-        this.setPosition(this.posX, this.posY, this.posZ);
-        this.motionX = 0.0D;
-        this.motionY = 0.0D;
-        this.motionZ = 0.0D;
-        double accelX = 10 + this.rand.nextGaussian() * 0.4D;
-        double accelY = 10 + this.rand.nextGaussian() * 0.4D;
-        double accelZ = 10 + this.rand.nextGaussian() * 0.4D;
-        double d0 = (double)MathHelper.sqrt(accelX * accelX + accelY * accelY + accelZ *accelZ);
-        this.motionX = accelX / d0 * 0.1D;
-        this.motionY = accelY / d0 * 0.1D;
-        this.motionZ = accelZ / d0 * 0.1D;
-
-    }
-    */
     
     @Override
     public void onUpdate()
     {
     	super.onUpdate();
     	
-    	this.posX += this.motionX;
-        this.posY += this.motionY;
-        this.posZ += this.motionZ;
-    	this.setPosition(this.posX, this.posY, this.posZ);
-    	
-    	ticksAlive--;
-    	if(ticksAlive <= 0) 
-    	{
-    		this.setDead();
+    	if (!world.isRemote){
+    		Vec3d vec3d1 = new Vec3d(this.posX, this.posY, this.posZ);
+    		Vec3d vec3d = new Vec3d(this.posX + this.motionX, this.posY + this.motionY, this.posZ + this.motionZ);
+        	RayTraceResult raytraceresult = this.world.rayTraceBlocks(vec3d1, vec3d, false, true, false);
+        	vec3d1 = new Vec3d(this.posX, this.posY, this.posZ);
+        	vec3d = new Vec3d(this.posX + this.motionX, this.posY + this.motionY, this.posZ + this.motionZ);
+        	
+        	if(raytraceresult != null ){
+        		vec3d = new Vec3d(raytraceresult.hitVec.xCoord, raytraceresult.hitVec.yCoord, raytraceresult.hitVec.zCoord);
+        	}
+        	
+        	Entity entity = this.findEntityOnPath(vec3d1, vec3d);
+        	
+        	if(entity != null){
+        		raytraceresult = new RayTraceResult(entity);
+        	}
+        	
+        	if(raytraceresult != null && raytraceresult.entityHit instanceof EntityPlayer){
+        		EntityPlayer entityplayer = (EntityPlayer) raytraceresult.entityHit;
+        		
+        		if(this.shooter instanceof EntityPlayer && !((EntityPlayer) this.shooter).canAttackPlayer(entityplayer)){
+        			raytraceresult = null;
+        		}
+        	}
+        	
+        	if(raytraceresult != null){
+        		this.onHit(raytraceresult);;
+        	}
+        	
+        	this.posX += this.motionX;
+            this.posY += this.motionY;
+            this.posZ += this.motionZ;
+            
+        	this.setPosition(this.posX, this.posY, this.posZ);
+        	
+        	ticksAlive--;
+        	if(ticksAlive <= 0) 
+        	{
+        		this.setDead();
+        	}
     	}
-    }
+   }
     
     @Nullable
     protected Entity findEntityOnPath(Vec3d start, Vec3d end)
     {
         Entity entity = null;
-        List<Entity> list = this.world.getEntitiesInAABBexcluding(this, this.getEntityBoundingBox().addCoord(this.motionX, this.motionY, this.motionZ).expandXyz(1.0D), ARROW_TARGETS);
-        double d0 = 0.0D;
+        List<Entity> list = this.world.getEntitiesInAABBexcluding(this, this.getEntityBoundingBox().addCoord(this.motionX, this.motionY, this.motionZ).expandXyz(1.0D), BULLET_TARGETS);
+        double closestDistance = 0.0D;
 
         for (int i = 0; i < list.size(); ++i)
         {
-            Entity entity1 = (Entity)list.get(i);
+            Entity hitEntity = (Entity)list.get(i);
 
-            if (entity1 != this.shootingEntity || this.ticksInAir >= 5)
+            if (hitEntity != this.shooter)
             {
-                AxisAlignedBB axisalignedbb = entity1.getEntityBoundingBox().expandXyz(0.30000001192092896D);
+                AxisAlignedBB axisalignedbb = hitEntity.getEntityBoundingBox().expandXyz(0.30000001192092896D);
                 RayTraceResult raytraceresult = axisalignedbb.calculateIntercept(start, end);
 
                 if (raytraceresult != null)
                 {
-                    double d1 = start.squareDistanceTo(raytraceresult.hitVec);
+                    double distanceToHit = start.squareDistanceTo(raytraceresult.hitVec);
 
-                    if (d1 < d0 || d0 == 0.0D)
+                    if (distanceToHit < closestDistance || closestDistance == 0.0D)
                     {
-                        entity = entity1;
-                        d0 = d1;
+                        entity = hitEntity;
+                        closestDistance = distanceToHit;
                     }
                 }
             }
@@ -134,29 +149,28 @@ public class EntityBullet extends Entity implements IProjectile
         return entity;
     }
 
-	@Override
-	protected void entityInit() 
+	public void onHit(RayTraceResult raytraceResultIn)
 	{
+		Entity entity = raytraceResultIn.entityHit;
 		
-	}
-
-
-	@Override
-	public void setThrowableHeading(double x, double y, double z, float velocity, float inaccuracy) 
-	{
+		if(entity != null){
+			if(entity == shooter) return;
+			float damage = this.damage;
+			entity.attackEntityFrom(DamageSource.ANVIL, damage);
+			this.setDead();
+			return;
+		}
 		
-	}
-
-	protected void onHit(RayTraceResult raytraceResultIn)
-	{
-		if (this.shootingEntity == null)
-        {
-            ModDamageSource.causeBulletDamage(this, this);
-        }
-        else
-        {
-            ModDamageSource.causeBulletDamage(this, this.shootingEntity);
-        }
+		if(raytraceResultIn.getBlockPos() != null){
+			IBlockState state = world.getBlockState(raytraceResultIn.getBlockPos());
+			Block block = state.getBlock();
+			if((block instanceof BlockBreakable || block instanceof BlockPane) && state.getMaterial() == Material.GLASS){
+				world.destroyBlock(raytraceResultIn.getBlockPos(), false);
+			}
+			if(!block.isReplaceable(world, raytraceResultIn.getBlockPos())){
+				this.setDead();
+			}
+		}
 	}
 
 	public EntityLivingBase getShooter() {
@@ -169,13 +183,11 @@ public class EntityBullet extends Entity implements IProjectile
 
 
 	protected ItemStack getArrowStack() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	protected void writeEntityToNBT(NBTTagCompound compound) {
-		// TODO Auto-generated method stub
 		compound.setDouble("damage", this.damage);
 	}
 	
@@ -184,8 +196,17 @@ public class EntityBullet extends Entity implements IProjectile
 	{
 		if (compound.hasKey("damage", 99))
         {
-            this.damage = compound.getDouble("damage");
+            this.damage = (float) compound.getDouble("damage");
         }
 	}
-	
+
+
+	@Override
+	protected void entityInit() {}
+
+
+	@Override
+	public void setThrowableHeading(double x, double y, double z, float velocity, float inaccuracy) {
+		
+	}
 }
